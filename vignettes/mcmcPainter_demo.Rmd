@@ -1,0 +1,432 @@
+---
+title: "mcmcPainter: Complete MCMC Line Painting Demo"
+author: "David Hodgson"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+vignette: >
+  %\VignetteIndexEntry{mcmcPainter: Complete MCMC Line Painting Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  dpi = 150
+)
+```
+
+# mcmcPainter: Complete MCMC Line Painting Demo
+
+This vignette demonstrates the complete workflow of the `mcmcPainter` package, featuring automatic image analysis, PNG verification, intelligent parameter optimization, and beautiful triptych visualizations.
+
+## Setup
+
+First, let's load the package and compile the C++ code:
+
+```{r setup-package}
+# Load the package functions
+source("../R/mcmcPainter.R")
+source("../R/mcmc_core.R") 
+source("../R/utilities.R")
+
+# Compile the C++ code for performance
+cat("Compiling C++ code...\n")
+Rcpp::sourceCpp("../src/mcmc_painter_cpp.cpp")
+cat("C++ code compiled successfully!\n\n")
+```
+
+## Image Analysis and PNG Verification
+
+Let's start by analyzing the available images and demonstrating the PNG verification capabilities:
+
+```{r analyze-images}
+# Analyze both available images
+images <- c("../inst/extdata/leaf_converted.png", "../inst/extdata/iamami.png")
+
+cat("Image Analysis Results:\n")
+cat("======================\n\n")
+
+for (img_path in images) {
+  cat("File:", basename(img_path), "\n")
+  cat("----------------------------------------\n")
+  
+  img_info <- get_image_info(img_path)
+  
+  cat("Dimensions:", img_info$width, "x", img_info$height, "pixels\n")
+  cat("File size:", round(img_info$file_size / 1024, 1), "KB\n")
+  cat("File extension:", img_info$file_extension, "\n")
+  cat("PNG verification:", ifelse(img_info$is_true_png, "✓ True PNG", "✗ Not a true PNG"), "\n")
+  cat("Aspect ratio:", round(img_info$width / img_info$height, 3), "\n\n")
+}
+```
+
+## Automatic MCMC Configuration
+
+Now let's demonstrate the automatic configuration system for both images:
+
+```{r auto-config}
+# Demonstrate auto-configuration for different quality levels
+cat("Automatic MCMC Configuration Examples:\n")
+cat("=====================================\n\n")
+
+# Test with leaf image
+leaf_path <- "../inst/extdata/leaf_converted.png"
+
+cat("1. Leaf Image - Standard Quality (max_dimension = 800):\n")
+cat("----------------------------------------------------\n")
+leaf_std <- auto_configure_mcmc(leaf_path, max_dimension = 800, target_iterations = 20000)
+
+cat("\n2. Leaf Image - High Quality (max_dimension = 1200):\n")
+cat("--------------------------------------------------\n")
+leaf_hq <- auto_configure_mcmc(leaf_path, max_dimension = 1200, target_iterations = 30000)
+
+cat("\n3. Leaf Image - Quick Demo (max_dimension = 400):\n")
+cat("------------------------------------------------\n")
+leaf_quick <- auto_configure_mcmc(leaf_path, max_dimension = 400, target_iterations = 5000)
+
+# Test with iamami image
+iamami_path <- "../inst/extdata/iamami.png"
+
+cat("\n4. Iamami Image - Standard Quality (max_dimension = 800):\n")
+cat("--------------------------------------------------------\n")
+iamami_std <- auto_configure_mcmc(iamami_path, max_dimension = 800, target_iterations = 20000)
+```
+
+## Comprehensive MCMC Options
+
+Let's explore the comprehensive MCMC options available in the package:
+
+```{r mcmc-options}
+# Demonstrate different MCMC configuration options
+cat("MCMC Configuration Options:\n")
+cat("==========================\n\n")
+
+# Option 1: Full auto-configuration
+cat("Option 1: Full Auto-Configuration\n")
+cat("---------------------------------\n")
+cat("This automatically determines all parameters:\n")
+cat("- Image dimensions (scaled optimally)\n")
+cat("- Number of iterations (based on complexity)\n")
+cat("- Save frequency (balanced for progress tracking)\n")
+cat("- All other MCMC parameters\n\n")
+
+# Option 2: Partial auto-configuration
+cat("Option 2: Partial Auto-Configuration\n")
+cat("------------------------------------\n")
+cat("You can override specific parameters:\n")
+cat("- Set custom dimensions\n")
+cat("- Specify iteration count\n")
+cat("- Control save frequency\n")
+cat("- Keep auto-optimization for other parameters\n\n")
+
+# Option 3: Manual configuration
+cat("Option 3: Manual Configuration\n")
+cat("------------------------------\n")
+cat("Complete control over all parameters:\n")
+cat("- Exact dimensions\n")
+cat("- Custom iteration count\n")
+cat("- Specific save frequency\n")
+cat("- Manual parameter tuning\n\n")
+
+# Example configurations
+cat("Example Configurations:\n")
+cat("======================\n\n")
+
+# Quick demo configuration
+cat("Quick Demo (auto_config = TRUE, max_dimension = 400):\n")
+cat("- Fast execution for testing\n")
+cat("- Lower resolution for speed\n")
+cat("- Fewer iterations\n")
+cat("- Frequent saves for progress tracking\n\n")
+
+# Production configuration
+cat("Production Quality (auto_config = TRUE, max_dimension = 1200):\n")
+cat("- High resolution output\n")
+cat("- More iterations for quality\n")
+cat("- Balanced save frequency\n")
+cat("- Optimized for final results\n\n")
+
+# Custom configuration
+cat("Custom Configuration (auto_config = FALSE):\n")
+cat("- Manual dimension specification\n")
+cat("- Custom iteration count\n")
+cat("- Specific save frequency\n")
+cat("- Full parameter control\n\n")
+```
+
+## Running MCMC with Different Options
+
+Let's demonstrate running MCMC with various configuration options:
+
+```{r run-mcmc-examples, eval=FALSE}
+# Example 1: Full auto-configuration (recommended for most users)
+cat("Example 1: Full Auto-Configuration\n")
+cat("==================================\n")
+res1 <- run_line_painter(
+  image_path = "../inst/extdata/leaf_converted.png",
+  out_dir = "inst/results/leaf_auto_demo",
+  seed = 42,
+  auto_config = TRUE,  # Enable auto-configuration
+  max_dimension = 800, # Target max dimension
+  verbose = TRUE
+)
+
+# Example 2: Partial auto-configuration with custom iterations
+cat("\nExample 2: Partial Auto-Configuration\n")
+cat("=====================================\n")
+res2 <- run_line_painter(
+  image_path = "../inst/extdata/iamami.png",
+  iters = 15000,       # Custom iteration count
+  out_dir = "inst/results/iamami_custom_iter",
+  seed = 42,
+  auto_config = TRUE,  # Keep auto-configuration for dimensions
+  max_dimension = 600, # Smaller target dimension
+  verbose = TRUE
+)
+
+# Example 3: Manual configuration
+cat("\nExample 3: Manual Configuration\n")
+cat("===============================\n")
+res3 <- run_line_painter(
+  image_path = "../inst/extdata/leaf_converted.png",
+  width = 512,         # Manual width
+  height = 512,        # Manual height
+  iters = 10000,       # Manual iterations
+  out_dir = "inst/results/leaf_manual_demo",
+  seed = 42,
+  auto_config = FALSE, # Disable auto-configuration
+  save_every = 500,    # Manual save frequency
+  verbose = TRUE
+)
+```
+
+**Note**: The MCMC runs above are set to `eval=FALSE` to avoid running during vignette compilation. In practice, you would run these to generate your artwork.
+
+## Creating and Saving Triptychs
+
+Now let's demonstrate the triptych creation and saving functionality:
+
+```{r triptych-demo}
+# Function to demonstrate triptych creation
+demonstrate_triptych <- function(image_path, title = "MCMC Line Painting Demo") {
+  # Load image
+  target_img <- load_image_rgb(image_path, out_w = 400, out_h = 400)
+  
+  # Create default canvas
+  H <- dim(target_img)[1]
+  W <- dim(target_img)[2]
+  default_canvas <- array(1, dim = c(H, W, 3))  # White background
+  
+  # Create simulated best result for demonstration
+  set.seed(42)
+  simulated_best <- default_canvas + array(rnorm(H * W * 3, 0, 0.1), dim = c(H, W, 3))
+  simulated_best <- pmin(pmax(simulated_best, 0), 1)
+  
+  # Create triptych
+  create_triptych(
+    default_canvas = default_canvas,
+    best_canvas = simulated_best,
+    target_img = target_img,
+    titles = c("Default Canvas", "Best Result", "Target Image"),
+    main_title = title
+  )
+  
+  return(list(
+    default_canvas = default_canvas,
+    best_canvas = simulated_best,
+    target_img = target_img
+  ))
+}
+
+# Demonstrate triptych for leaf image
+cat("Creating triptych for leaf image...\n")
+leaf_triptych <- demonstrate_triptych(
+  "../inst/extdata/leaf_converted.png", 
+  "Leaf Image MCMC Progression"
+)
+
+# Demonstrate triptych for iamami image
+cat("\nCreating triptych for iamami image...\n")
+iamami_triptych <- demonstrate_triptych(
+  "../inst/extdata/iamami.png", 
+  "Iamami Image MCMC Progression"
+)
+```
+
+## Saving Triptychs to Files
+
+Let's demonstrate saving triptychs in different formats:
+
+```{r save-triptychs}
+# Function to demonstrate triptych saving
+demonstrate_triptych_saving <- function(triptych_data, base_name, output_dir = "inst/results") {
+  # Create output directory
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Save as PDF
+  pdf_path <- file.path(output_dir, paste0(base_name, "_triptych.pdf"))
+  save_triptych(
+    default_canvas = triptych_data$default_canvas,
+    best_canvas = triptych_data$best_canvas,
+    target_img = triptych_data$target_img,
+    output_path = pdf_path,
+    width = 12, height = 5,
+    titles = c("Default Canvas", "Best Result", "Target Image"),
+    main_title = paste(base_name, "MCMC Progression"),
+    format = "pdf"
+  )
+  
+  # Save as PNG
+  png_path <- file.path(output_dir, paste0(base_name, "_triptych.png"))
+  save_triptych(
+    default_canvas = triptych_data$default_canvas,
+    best_canvas = triptych_data$best_canvas,
+    target_img = triptych_data$target_img,
+    output_path = png_path,
+    width = 12, height = 5,
+    titles = c("Default Canvas", "Best Result", "Target Image"),
+    main_title = paste(base_name, "MCMC Progression"),
+    format = "png"
+  )
+  
+  cat("Triptych saved for", base_name, ":\n")
+  cat("- PDF:", pdf_path, "\n")
+  cat("- PNG:", png_path, "\n\n")
+}
+
+# Save triptychs for both images
+cat("Saving triptychs to files...\n")
+demonstrate_triptych_saving(leaf_triptych, "leaf", "inst/results/leaf_demo")
+demonstrate_triptych_saving(iamami_triptych, "iamami", "inst/results/iamami_demo")
+```
+
+## Performance Analysis and Optimization
+
+Let's analyze the performance implications of different configurations:
+
+```{r performance-analysis}
+# Performance analysis function
+analyze_performance <- function(configs, image_names) {
+  cat("Performance Analysis:\n")
+  cat("====================\n\n")
+  
+  for (i in seq_along(configs)) {
+    config <- configs[[i]]
+    name <- image_names[i]
+    
+    cat(name, "Image:\n")
+    cat("--------\n")
+    
+    # Original vs scaled complexity
+    original_pixels <- config$original_width * config$original_height
+    scaled_pixels <- config$scaled_width * config$scaled_height
+    
+    cat("Original complexity:", format(original_pixels, big.mark = ","), "pixels\n")
+    cat("Scaled complexity:", format(scaled_pixels, big.mark = ","), "pixels\n")
+    cat("Complexity reduction:", round((1 - scaled_pixels/original_pixels) * 100, 1), "%\n")
+    
+    # Performance estimates
+    estimated_memory_mb <- round(scaled_pixels * 3 * 8 / (1024 * 1024), 1)
+    estimated_time_min <- round(config$iterations / 1000, 1)
+    
+    cat("Estimated memory:", estimated_memory_mb, "MB\n")
+    cat("Estimated runtime:", estimated_time_min, "minutes\n")
+    cat("Save frequency:", config$save_every, "iterations\n")
+    cat("PNG verification:", ifelse(config$is_true_png, "✓ True PNG", "✗ Not a true PNG"), "\n\n")
+  }
+}
+
+# Analyze performance for different configurations
+configs <- list(leaf_std, leaf_hq, leaf_quick, iamami_std)
+image_names <- c("Leaf (Standard)", "Leaf (High Quality)", "Leaf (Quick)", "Iamami (Standard)")
+
+analyze_performance(configs, image_names)
+```
+
+## Advanced Customization Options
+
+Let's explore advanced customization capabilities:
+
+```{r advanced-customization}
+# Advanced customization examples
+cat("Advanced Customization Options:\n")
+cat("==============================\n\n")
+
+# Custom triptych titles
+cat("1. Custom Triptych Titles:\n")
+cat("-------------------------\n")
+cat("You can customize panel titles and main title:\n")
+cat("- Panel 1: 'Starting Point'\n")
+cat("- Panel 2: 'Generated Artwork'\n")
+cat("- Panel 3: 'Reference Image'\n")
+cat("- Main title: 'My Custom MCMC Art'\n\n")
+
+# Custom save formats and dimensions
+cat("2. Custom Save Formats:\n")
+cat("----------------------\n")
+cat("Save triptychs in different formats and sizes:\n")
+cat("- PDF: High-quality vector graphics\n")
+cat("- PNG: High-resolution raster images\n")
+cat("- Custom dimensions: 20x8 inches for wide displays\n")
+cat("- Custom DPI: 300 DPI for print quality\n\n")
+
+# Batch processing
+cat("3. Batch Processing:\n")
+cat("-------------------\n")
+cat("Process multiple images with consistent settings:\n")
+cat("- Same max_dimension for all images\n")
+cat("- Consistent iteration counts\n")
+cat("- Standardized output directories\n")
+cat("- Batch triptych generation\n\n")
+
+# Quality presets
+cat("4. Quality Presets:\n")
+cat("------------------\n")
+cat("Predefined configuration profiles:\n")
+cat("- Quick Demo: 400px, 5K iterations, fast execution\n")
+cat("- Standard: 800px, 20K iterations, balanced quality\n")
+cat("- High Quality: 1200px, 30K iterations, premium results\n")
+cat("- Ultra HD: 1600px, 50K iterations, maximum quality\n\n")
+```
+
+## Summary
+
+This vignette demonstrates the complete `mcmcPainter` package workflow:
+
+### **🎯 Core Features**
+1. **Automatic Image Analysis**: No need to manually specify dimensions
+2. **PNG Verification**: Distinguishes true PNGs from renamed files
+3. **Intelligent Parameter Optimization**: Automatic MCMC configuration
+4. **Comprehensive MCMC Options**: Full control when needed
+5. **Beautiful Triptychs**: Professional visualizations
+6. **Multiple Output Formats**: PDF and PNG support
+
+### **🚀 Usage Patterns**
+1. **Quick Start**: `run_line_painter(image_path)` with full auto-configuration
+2. **Custom Quality**: Adjust `max_dimension` and `target_iterations`
+3. **Manual Control**: Set `auto_config = FALSE` for complete control
+4. **Batch Processing**: Consistent settings across multiple images
+
+### **📊 Performance Optimization**
+- **Smart scaling** based on image complexity
+- **Iteration adjustment** for optimal quality
+- **Memory estimation** for resource planning
+- **Runtime prediction** for project planning
+
+### **🎨 Output Quality**
+- **Professional triptychs** showing progression
+- **High-resolution outputs** in multiple formats
+- **Progress tracking** throughout MCMC execution
+- **Performance metrics** for quality assessment
+
+The `mcmcPainter` package provides a complete, professional solution for generating line paintings through MCMC optimization, with intelligent automation and comprehensive customization options.

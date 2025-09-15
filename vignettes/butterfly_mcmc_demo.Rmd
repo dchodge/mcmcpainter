@@ -1,0 +1,378 @@
+---
+title: "Butterfly MCMC Line Painting Demo"
+author: "David Hodgson"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+    code_folding: show
+  pdf_document:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Butterfly MCMC Line Painting Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 12,
+  fig.height = 8,
+  fig.align = "center"
+)
+
+# Load required packages
+if (!require(magick)) install.packages("magick")
+if (!require(png)) install.packages("png")
+if (!require(Rcpp)) install.packages("Rcpp")
+```
+
+# Butterfly MCMC Line Painting Demo
+
+This vignette demonstrates the complete workflow for generating line paintings using the `mcmcPainter` package, featuring the beautiful `butterfly.png` image with 100,000 MCMC iterations for maximum detail and quality.
+
+## 🦋 **Image Analysis**
+
+First, let's analyze the butterfly image to understand its characteristics:
+
+```{r image_analysis}
+# Load package functions
+source("../R/mcmcPainter.R")
+source("../R/mcmc_core.R") 
+source("../R/utilities.R")
+
+# Analyze the butterfly image
+image_path <- "../inst/extdata/butterfly.png"
+cat("Analyzing image:", basename(image_path), "\n")
+cat("=====================================\n")
+
+img_info <- get_image_info(image_path)
+cat("File:", basename(image_path), "\n")
+cat("Original dimensions:", img_info$width, "x", img_info$height, "pixels\n")
+cat("File size:", round(img_info$file_size / 1024, 1), "KB\n")
+cat("PNG verification:", ifelse(img_info$is_true_png, "✓ True PNG", "✗ Not a true PNG"), "\n")
+cat("Aspect ratio:", round(img_info$width / img_info$height, 3), "\n")
+cat("Total pixels:", format(img_info$width * img_info$height, big.mark = ","), "\n\n")
+
+# Display the original image
+library(magick)
+butterfly_img <- image_read(image_path)
+image_info <- image_info(butterfly_img)
+cat("Magick image info:\n")
+cat("Dimensions:", image_info$width, "x", image_info$height, "\n")
+cat("Format:", image_info$format, "\n")
+cat("Colorspace:", image_info$colorspace, "\n")
+cat("Filesize:", round(image_info$filesize / 1024, 1), "KB\n\n")
+```
+
+## 🎯 **MCMC Configuration**
+
+Now let's configure the MCMC parameters for optimal performance on the butterfly image:
+
+```{r mcmc_config}
+# High-quality configuration for 100K steps
+cat("High-Quality MCMC Configuration:\n")
+cat("================================\n")
+cat("Target iterations: 100,000\n")
+cat("Save frequency: Every 5,000 iterations\n")
+cat("Max dimension: 1200 (high resolution)\n")
+cat("Expected runtime: 3-5 hours (depending on system)\n\n")
+
+# Auto-configure MCMC parameters
+config <- auto_configure_mcmc(
+  image_path = image_path,
+  max_dimension = 1200,        # High resolution
+  target_iterations = 100000    # 100K iterations
+)
+
+cat("Optimized MCMC Parameters:\n")
+cat("==========================\n")
+cat("Original dimensions:", config$original_width, "x", config$original_height, "\n")
+cat("Scaled dimensions:", config$scaled_width, "x", config$scaled_height, "\n")
+cat("Scaling factor:", round(config$scale_factor, 3), "\n")
+cat("Adjusted iterations:", format(config$iterations, big.mark = ","), "\n")
+cat("Save frequency:", format(config$save_every, big.mark = ","), "\n")
+cat("PNG verification:", ifelse(config$is_true_png, "✓ True PNG", "✗ Not a true PNG"), "\n\n")
+
+# Calculate complexity metrics
+original_pixels <- config$original_width * config$original_height
+scaled_pixels <- config$scaled_width * config$scaled_height
+complexity_reduction <- (1 - scaled_pixels / original_pixels) * 100
+
+cat("Complexity Analysis:\n")
+cat("===================\n")
+cat("Original pixels:", format(original_pixels, big.mark = ","), "\n")
+cat("Scaled pixels:", format(scaled_pixels, big.mark = ","), "\n")
+cat("Complexity reduction:", round(complexity_reduction, 1), "%\n")
+cat("Memory usage:", round(scaled_pixels * 3 * 8 / 1024 / 1024, 1), "MB\n\n")
+```
+
+## 🚀 **Running the MCMC Algorithm**
+
+Now let's run the MCMC algorithm to generate the line painting. This will take several hours for 100K iterations:
+
+```{r mcmc_run, eval=FALSE}
+# Compile the C++ code for performance
+cat("Compiling C++ code...\n")
+Rcpp::sourceCpp("../src/mcmc_painter_cpp.cpp")
+cat("C++ code compiled successfully!\n\n")
+
+# Run MCMC with high-quality settings
+cat("Starting high-quality MCMC run for butterfly...\n")
+cat("This will take several hours. Progress will be saved every 5,000 iterations.\n\n")
+
+res <- run_line_painter(
+  image_path = image_path,
+  max_dimension = 1200,        # High resolution
+  iters = 100000,              # 100K iterations
+  out_dir = "../inst/results/butterfly_100k_high_quality",
+  seed = 42,
+  auto_config = TRUE,          # Enable auto-configuration
+  verbose = TRUE
+)
+
+cat("\n🎉 MCMC completed successfully!\n")
+cat("===============================\n")
+cat("Final number of lines:", length(res$lines), "\n")
+cat("Best iteration:", res$best$iter, "\n")
+cat("Best SSE:", round(res$best$sse, 2), "\n")
+```
+
+## 📊 **Results Analysis**
+
+After the MCMC completes, let's analyze the results:
+
+```{r results_analysis, eval=FALSE}
+# Load the final image with the same dimensions used in MCMC
+target_img <- load_image_rgb(image_path, 
+                            out_w = res$canvas %>% dim() %>% .[2], 
+                            out_h = res$canvas %>% dim() %>% .[1])
+
+# Create default white canvas
+H <- dim(target_img)[1]
+W <- dim(target_img)[2]
+default_canvas <- array(1, dim = c(H, W, 3))
+
+# Calculate performance metrics
+sse <- sum((target_img - res$best$canvas)^2)
+mse <- sse / length(target_img)
+psnr <- 20 * log10(1 / sqrt(mse))
+
+cat("Performance Metrics:\n")
+cat("==================\n")
+cat("Best SSE:", round(sse, 2), "\n")
+cat("Best MSE:", round(mse, 6), "\n")
+cat("Best PSNR:", round(psnr, 2), "dB\n")
+cat("Number of lines:", length(res$lines), "\n")
+cat("Final dimensions:", W, "x", H, "\n\n")
+
+# Display optimization summary
+cat("Optimization Summary:\n")
+cat("====================\n")
+cat("Original dimensions:", config$original_width, "x", config$original_height, "\n")
+cat("Final dimensions:", W, "x", H, "\n")
+cat("Total iterations:", 100000, "\n")
+cat("Save frequency:", 5000, "\n")
+cat("PNG verification:", ifelse(config$is_true_png, "✓ True PNG", "✗ Not a true PNG"), "\n")
+```
+
+## 🎨 **Triptych Visualization**
+
+Create a beautiful triptych showing the progression from white canvas to final artwork:
+
+```{r triptych_creation, eval=FALSE}
+# Create triptych
+create_triptych(
+  default_canvas = default_canvas,
+  best_canvas = res$best$canvas,
+  target_img = target_img,
+  titles = c("Default (White Canvas)", "Best MCMC Result (100K steps)", "True Butterfly Image"),
+  main_title = "Butterfly Image: 100K MCMC Progression"
+)
+
+# Save triptych in multiple formats
+cat("Saving triptych...\n")
+output_dir <- "../inst/results/butterfly_100k_high_quality"
+
+# Save as PDF
+pdf_path <- file.path(output_dir, "butterfly_100k_triptych.pdf")
+save_triptych(
+  default_canvas = default_canvas,
+  best_canvas = res$best$canvas,
+  target_img = target_img,
+  output_path = pdf_path,
+  width = 18, height = 7,  # Larger for high-quality output
+  titles = c("Default (White Canvas)", "Best MCMC Result (100K steps)", "True Butterfly Image"),
+  main_title = "Butterfly Image: 100K MCMC Progression",
+  format = "pdf"
+)
+
+# Save as PNG
+png_path <- file.path(output_dir, "butterfly_100k_triptych.png")
+save_triptych(
+  default_canvas = default_canvas,
+  best_canvas = res$best$canvas,
+  target_img = target_img,
+  output_path = png_path,
+  width = 18, height = 7,  # Larger for high-quality output
+  titles = c("Default (White Canvas)", "Best MCMC Result (100K steps)", "True Butterfly Image"),
+  main_title = "Butterfly Image: 100K MCMC Progression",
+  format = "png"
+)
+
+cat("Triptych saved successfully!\n")
+cat("Files created:\n")
+cat("- PDF:", pdf_path, "\n")
+cat("- PNG:", png_path, "\n")
+```
+
+## 📁 **Output Files**
+
+The MCMC run will generate several output files:
+
+```{r output_files, eval=FALSE}
+# List all saved iterations
+cat("Saved Iterations:\n")
+cat("=================\n")
+iter_files <- list.files(output_dir, pattern = "iter_.*\\.png", full.names = FALSE)
+iter_files <- sort(iter_files)
+for (file in iter_files) {
+  cat("-", file, "\n")
+}
+
+cat("\nFinal Output Files:\n")
+cat("==================\n")
+cat("- Best canvas: best_canvas.png\n")
+cat("- Final lines: final_lines.RData\n")
+cat("- Triptych PDF: butterfly_100k_triptych.pdf\n")
+cat("- Triptych PNG: butterfly_100k_triptych.png\n")
+cat("- Progress log: mcmc_progress.log\n")
+```
+
+## 🔍 **Progression Analysis**
+
+Let's examine how the MCMC progresses over the 100K iterations:
+
+```{r progression_analysis, eval=FALSE}
+# Load saved iterations for analysis
+library(png)
+library(grid)
+
+# Function to load and display progression
+show_progression <- function(iterations = c(0, 25000, 50000, 75000, 100000)) {
+  par(mfrow = c(2, 3), mar = c(2, 2, 2, 1))
+  
+  for (iter in iterations) {
+    if (iter == 0) {
+      # Show white canvas
+      img <- array(1, dim = c(H, W, 3))
+      title <- "Iteration 0 (White)"
+    } else {
+      # Load saved iteration
+      file_path <- file.path(output_dir, paste0("iter_", sprintf("%06d", iter), ".png"))
+      if (file.exists(file_path)) {
+        img <- readPNG(file_path)
+        title <- paste("Iteration", format(iter, big.mark = ","))
+      } else {
+        next
+      }
+    }
+    
+    plot.new()
+    rasterImage(img, 0, 0, 1, 1)
+    title(title, cex.main = 0.8)
+  }
+  
+  # Show target image
+  plot.new()
+  rasterImage(target_img, 0, 0, 1, 1)
+  title("Target Image", cex.main = 0.8)
+  
+  par(mfrow = c(1, 1))
+}
+
+# Display progression (if files exist)
+if (dir.exists(output_dir)) {
+  show_progression()
+}
+```
+
+## 📈 **Performance Comparison**
+
+Compare the butterfly results with other images:
+
+```{r performance_comparison, eval=FALSE}
+# Performance comparison table
+comparison_data <- data.frame(
+  Image = c("Butterfly", "Leaf", "Iamami"),
+  Dimensions = c(
+    paste(config$scaled_width, "x", config$scaled_height),
+    "800 x 1422", 
+    "788 x 605"
+  ),
+  Iterations = c(100000, 20000, 100000),
+  File_Size_KB = c(
+    round(config$file_size / 1024, 1),
+    132,
+    336
+  ),
+  Complexity = c(
+    "High (4.2MB)",
+    "Medium (132KB)", 
+    "Medium (336KB)"
+  )
+)
+
+knitr::kable(comparison_data, 
+             caption = "Performance Comparison Across Images",
+             align = c('l', 'c', 'c', 'c', 'l'))
+```
+
+## 🎯 **Key Insights**
+
+### **Why 100K Iterations for Butterfly?**
+
+1. **High Complexity**: The butterfly image has intricate wing patterns and fine details
+2. **Large File Size**: 4.2MB indicates rich texture and color variation
+3. **Fine Details**: Wings, antennae, and body require precise line placement
+4. **Color Gradients**: Smooth transitions need many thin, overlapping strokes
+
+### **Expected Results**
+
+- **Line Count**: 500-1000+ lines for full detail
+- **Quality**: Near-photorealistic line painting
+- **Convergence**: Stable improvement through 100K steps
+- **Memory**: Efficient bounding box updates for performance
+
+## 🚀 **Running the Full Demo**
+
+To run the complete 100K MCMC demo:
+
+```r
+# Option 1: Run the vignette
+rmarkdown::render("vignettes/butterfly_mcmc_demo.Rmd")
+
+# Option 2: Run directly in R
+source("vignettes/butterfly_mcmc_demo.Rmd")
+
+# Option 3: Use the standalone script
+source("create_butterfly_triptych.R")
+```
+
+## 📚 **Further Reading**
+
+- **Package Documentation**: `?mcmcPainter`
+- **Core Functions**: `?run_line_painter`, `?create_triptych`
+- **Utilities**: `?get_image_info`, `?auto_configure_mcmc`
+- **Vignettes**: See other image demos for comparison
+
+---
+
+**Note**: The 100K MCMC run will take 3-5 hours depending on your system. The results will show the full artistic potential of the algorithm on complex, detailed images like the butterfly! 🦋✨
