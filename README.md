@@ -157,7 +157,22 @@ mcmcPainter/
 
 ## Examples
 
-The package includes several example images and pre-generated results:
+### High-Quality Line Painting: Portrait Progression
+
+Here's a stunning example of the MCMC line painting algorithm in action, showing the progression from a white canvas to a detailed portrait over 100,000 iterations:
+
+| Initial Canvas | 25,000 Iterations | 50,000 Iterations | 75,000 Iterations | Final Result (100K) |
+|:---:|:---:|:---:|:---:|:---:|
+| ![Initial](inst/results/vi_leigh_line_painting_100k/iter_000000.png) | ![25K](inst/results/vi_leigh_line_painting_100k/iter_025000.png) | ![50K](inst/results/vi_leigh_line_painting_100k/iter_050000.png) | ![75K](inst/results/vi_leigh_line_painting_100k/iter_075000.png) | ![Final](inst/results/vi_leigh_line_painting_100k/best_iter_100000.png) |
+
+**Triptych View**: Complete progression from white canvas to final artwork
+![Triptych](inst/results/vi_leigh_line_painting_100k/vi_leigh_line_triptych.png)
+
+*This example demonstrates the algorithm's ability to capture fine facial details, hair texture, and subtle shading through strategic line placement and optimization.*
+
+### Additional Examples
+
+The package includes several other example images and pre-generated results:
 
 - **Leaf**: Botanical line artwork (132KB image)
 - **Iamami**: Portrait with auto-configuration (336KB image)
