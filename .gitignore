@@ -13,6 +13,11 @@ inst/doc/
 vignettes/*.html
 vignettes/*.pdf
 
+# Compiled C++ files
+*.o
+*.so
+symbols.rds
+
 # macOS
 .DS_Store
 .DS_Store?
