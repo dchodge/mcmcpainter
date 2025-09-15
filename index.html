@@ -49,7 +49,16 @@
 <div class="page-header"><h1 id="mcmcpainter">mcmcPainter<a class="anchor" aria-label="anchor" href="#mcmcpainter"></a>
 </h1></div>
 <p><strong>MCMC-Based Artistic Line and Dot Painting Generation</strong></p>
-<p>Transform any image into beautiful line-based or pointillism-style artwork using Reversible Jump MCMC algorithms. This R package combines statistical optimization with digital art generation to create stunning artistic interpretations of photographs.</p>
+<p>Transform any image into line-based or pointillism-style artwork using Reversible Jump MCMC algorithms. This R package combines statistical optimization with digital art generation to create stunning artistic interpretations of photographs.</p>
+<div class="section level2">
+<h2 id="visual-example">Visual Example<a class="anchor" aria-label="anchor" href="#visual-example"></a>
+</h2>
+<p>Here’s an example of the MCMC line painting algorithm in action, showing the complete transformation from a white canvas to a detailed portrait:</p>
+<div class="float">
+<img src="reference/figures/vi_leigh_line_triptych.png" alt="vi_leigh_triptych"><div class="figcaption">vi_leigh_triptych</div>
+</div>
+<p><em>Complete progression from white canvas to final artwork over 100,000 iterations</em></p>
+</div>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -268,14 +277,13 @@
 <th align="center">Final Result (100K)</th>
 </tr></thead>
 <tbody><tr class="odd">
-<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_000000.png" alt="Initial"></td>
-<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_025000.png" alt="25K"></td>
-<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_050000.png" alt="50K"></td>
-<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_075000.png" alt="75K"></td>
-<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/best_iter_100000.png" alt="Final"></td>
+<td align="center"><img src="reference/figures/vi_leigh_initial.png" alt="Initial"></td>
+<td align="center"><img src="reference/figures/vi_leigh_25k.png" alt="25K"></td>
+<td align="center"><img src="reference/figures/vi_leigh_50k.png" alt="50K"></td>
+<td align="center"><img src="reference/figures/vi_leigh_75k.png" alt="75K"></td>
+<td align="center"><img src="reference/figures/vi_leigh_final.png" alt="Final"></td>
 </tr></tbody>
 </table>
-<p><strong>Triptych View</strong>: Complete progression from white canvas to final artwork <img src="inst/results/vi_leigh_line_painting_100k/vi_leigh_line_triptych.png" alt="Triptych"></p>
 <p><em>This example demonstrates the algorithm’s ability to capture fine facial details, hair texture, and subtle shading through strategic line placement and optimization.</em></p>
 </div>
 <div class="section level3">
