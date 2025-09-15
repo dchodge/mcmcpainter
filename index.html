@@ -292,7 +292,40 @@
 <div class="section level2">
 <h2 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
 </h2>
-<p>The package includes several example images and pre-generated results:</p>
+<div class="section level3">
+<h3 id="high-quality-line-painting-portrait-progression">High-Quality Line Painting: Portrait Progression<a class="anchor" aria-label="anchor" href="#high-quality-line-painting-portrait-progression"></a>
+</h3>
+<p>Here’s a stunning example of the MCMC line painting algorithm in action, showing the progression from a white canvas to a detailed portrait over 100,000 iterations:</p>
+<table class="table">
+<colgroup>
+<col width="20%">
+<col width="20%">
+<col width="20%">
+<col width="20%">
+<col width="20%">
+</colgroup>
+<thead><tr class="header">
+<th align="center">Initial Canvas</th>
+<th align="center">25,000 Iterations</th>
+<th align="center">50,000 Iterations</th>
+<th align="center">75,000 Iterations</th>
+<th align="center">Final Result (100K)</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_000000.png" alt="Initial"></td>
+<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_025000.png" alt="25K"></td>
+<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_050000.png" alt="50K"></td>
+<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/iter_075000.png" alt="75K"></td>
+<td align="center"><img src="inst/results/vi_leigh_line_painting_100k/best_iter_100000.png" alt="Final"></td>
+</tr></tbody>
+</table>
+<p><strong>Triptych View</strong>: Complete progression from white canvas to final artwork <img src="inst/results/vi_leigh_line_painting_100k/vi_leigh_line_triptych.png" alt="Triptych"></p>
+<p><em>This example demonstrates the algorithm’s ability to capture fine facial details, hair texture, and subtle shading through strategic line placement and optimization.</em></p>
+</div>
+<div class="section level3">
+<h3 id="additional-examples">Additional Examples<a class="anchor" aria-label="anchor" href="#additional-examples"></a>
+</h3>
+<p>The package includes several other example images and pre-generated results:</p>
 <ul>
 <li>
 <strong>Leaf</strong>: Botanical line artwork (132KB image)</li>
@@ -305,6 +338,7 @@
 <li>
 <strong>Portrait</strong>: Personal photo artwork (3.2MB image)</li>
 </ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
