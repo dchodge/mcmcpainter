@@ -2,7 +2,15 @@
 
 **MCMC-Based Artistic Line and Dot Painting Generation**
 
-Transform any image into beautiful line-based or pointillism-style artwork using Reversible Jump MCMC algorithms. This R package combines statistical optimization with digital art generation to create stunning artistic interpretations of photographs.
+Transform any image into line-based or pointillism-style artwork using Reversible Jump MCMC algorithms. This R package combines statistical optimization with digital art generation to create stunning artistic interpretations of photographs.
+
+## Visual Example
+
+Here's an example of the MCMC line painting algorithm in action, showing the complete transformation from a white canvas to a detailed portrait:
+
+![vi_leigh_triptych](man/figures/vi_leigh_line_triptych.png)
+
+*Complete progression from white canvas to final artwork over 100,000 iterations*
 
 ## Overview
 
@@ -163,10 +171,7 @@ Here's a stunning example of the MCMC line painting algorithm in action, showing
 
 | Initial Canvas | 25,000 Iterations | 50,000 Iterations | 75,000 Iterations | Final Result (100K) |
 |:---:|:---:|:---:|:---:|:---:|
-| ![Initial](inst/results/vi_leigh_line_painting_100k/iter_000000.png) | ![25K](inst/results/vi_leigh_line_painting_100k/iter_025000.png) | ![50K](inst/results/vi_leigh_line_painting_100k/iter_050000.png) | ![75K](inst/results/vi_leigh_line_painting_100k/iter_075000.png) | ![Final](inst/results/vi_leigh_line_painting_100k/best_iter_100000.png) |
-
-**Triptych View**: Complete progression from white canvas to final artwork
-![Triptych](inst/results/vi_leigh_line_painting_100k/vi_leigh_line_triptych.png)
+| ![Initial](man/figures/vi_leigh_initial.png) | ![25K](man/figures/vi_leigh_25k.png) | ![50K](man/figures/vi_leigh_50k.png) | ![75K](man/figures/vi_leigh_75k.png) | ![Final](man/figures/vi_leigh_final.png) |
 
 *This example demonstrates the algorithm's ability to capture fine facial details, hair texture, and subtle shading through strategic line placement and optimization.*
 

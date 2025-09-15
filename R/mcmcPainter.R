@@ -145,11 +145,48 @@ get_image_info <- function(image_path) {
   )
 }
 
-#' Auto-configure MCMC parameters based on image dimensions
-#' @param image_path Path to the image file
-#' @param max_dimension Maximum dimension (width or height) to scale to
-#' @param target_iterations Target number of MCMC iterations
-#' @return List with optimized MCMC parameters
+#' Auto-Configure MCMC Parameters
+#'
+#' Automatically determines optimal MCMC parameters based on image analysis.
+#' Analyzes image dimensions, complexity, and file properties to suggest
+#' appropriate canvas size, iteration count, and save frequency.
+#'
+#' @param image_path Character string. Path to the target image file
+#' @param max_dimension Integer. Maximum dimension (width or height) to scale to (default: 800)
+#' @param target_iterations Integer. Target number of MCMC iterations (default: 20000)
+#' 
+#' @return A list containing:
+#' \item{width}{Recommended canvas width in pixels}
+#' \item{height}{Recommended canvas height in pixels}
+#' \item{iters}{Recommended number of MCMC iterations}
+#' \item{save_every}{Recommended save frequency}
+#' \item{scale_factor}{Scaling factor applied to original image}
+#' \item{original_dimensions}{Original image dimensions [width, height]}
+#' \item{file_size}{Image file size in bytes}
+#' \item{is_true_png}{Logical indicating if file is a true PNG}
+#' 
+#' @details The function analyzes:
+#' \itemize{
+#'   \item Image dimensions and aspect ratio
+#'   \item File size and complexity
+#'   \item PNG format verification
+#'   \item Optimal scaling for performance vs quality
+#' }
+#' 
+#' @examples
+#' \dontrun{
+#' # Auto-configure for an image
+#' config <- auto_configure_mcmc("path/to/image.png")
+#' 
+#' # Use with custom max dimension
+#' config <- auto_configure_mcmc("path/to/image.png", max_dimension = 1200)
+#' 
+#' # Use the configuration
+#' res <- run_line_painter("path/to/image.png", 
+#'                        width = config$width, 
+#'                        height = config$height,
+#'                        iters = config$iters)
+#' }
 #' @export
 auto_configure_mcmc <- function(image_path, max_dimension = 800, target_iterations = 20000) {
   # Get image information
@@ -200,18 +237,50 @@ auto_configure_mcmc <- function(image_path, max_dimension = 800, target_iteratio
   ))
 }
 
-#' Main MCMC line painting function with comprehensive options
-#' @param image_path Path to target image
-#' @param width Output width (if NULL, auto-configured)
-#' @param height Output height (if NULL, auto-configured)
-#' @param iters Number of MCMC iterations (if NULL, auto-configured)
-#' @param out_dir Output directory for results
-#' @param seed Random seed
-#' @param save_every Save frequency (if NULL, auto-configured)
-#' @param max_dimension Maximum dimension for auto-configuration
-#' @param auto_config Whether to use auto-configuration
-#' @param verbose Verbose output
-#' @return List with results
+#' Run MCMC Line Painting Algorithm
+#'
+#' Generates artistic line paintings from target images using Reversible Jump MCMC.
+#' The algorithm iteratively adds, removes, and modifies lines to minimize the 
+#' difference between the canvas and target image.
+#'
+#' @param image_path Character string. Path to the target image file (PNG, JPEG, etc.)
+#' @param width Integer. Output canvas width in pixels. If NULL, uses auto-configuration
+#' @param height Integer. Output canvas height in pixels. If NULL, uses auto-configuration  
+#' @param iters Integer. Number of MCMC iterations to run. If NULL, uses auto-configuration
+#' @param out_dir Character string. Directory to save results and intermediate images
+#' @param seed Integer. Random seed for reproducibility (default: 42)
+#' @param save_every Integer. Save intermediate results every N iterations. If NULL, uses auto-configuration
+#' @param max_dimension Integer. Maximum dimension for auto-scaling (default: 800)
+#' @param auto_config Logical. Whether to use automatic parameter optimization (default: TRUE)
+#' @param verbose Logical. Whether to print progress information (default: TRUE)
+#' 
+#' @return A list containing:
+#' \item{lines}{List of line objects with parameters (x1, y1, x2, y2, r, g, b, alpha, w)}
+#' \item{best}{List with best iteration results (canvas, sse, iter)}
+#' \item{canvas}{Final canvas array [H, W, 3]}
+#' \item{dimensions}{Vector of final dimensions [width, height]}
+#' \item{iterations}{Total number of iterations completed}
+#' \item{sse_history}{Vector of SSE values over iterations}
+#' 
+#' @details The algorithm uses four types of MCMC moves:
+#' \itemize{
+#'   \item Birth: Add new lines based on image residuals
+#'   \item Death: Remove existing lines
+#'   \item Jitter: Perturb line parameters (position, color, opacity, thickness)
+#'   \item Swap: Reorder line rendering for better composition
+#' }
+#' 
+#' @examples
+#' \dontrun{
+#' # Basic usage with auto-configuration
+#' res <- run_line_painter("path/to/image.png", iters = 5000)
+#' 
+#' # Manual configuration
+#' res <- run_line_painter("path/to/image.png", width = 800, height = 600, iters = 10000)
+#' 
+#' # High-quality run
+#' res <- run_line_painter("path/to/image.png", iters = 100000, max_dimension = 1200)
+#' }
 #' @export
 run_line_painter <- function(image_path,
                              width = NULL, height = NULL,
@@ -276,13 +345,36 @@ run_line_painter <- function(image_path,
   invisible(res)
 }
 
-#' Create triptych visualization showing MCMC progression
-#' @param default_canvas Default white canvas
-#' @param best_canvas Best MCMC result canvas
-#' @param target_img Target image
-#' @param titles Panel titles
-#' @param main_title Main title
-#' @return Invisible NULL
+#' Create Triptych Visualization
+#'
+#' Creates a three-panel visualization showing the progression from default canvas
+#' to final MCMC result, alongside the target image for comparison.
+#'
+#' @param default_canvas Array [H, W, 3]. Initial white canvas (usually array of 1s)
+#' @param best_canvas Array [H, W, 3]. Best MCMC result canvas from run_line_painter()
+#' @param target_img Array [H, W, 3]. Target image array
+#' @param titles Character vector of length 3. Titles for each panel (default: c("Default (White Canvas)", "Best MCMC Result", "True Image"))
+#' @param main_title Character string. Main title for the entire plot (default: "MCMC Line Painting Progression")
+#' 
+#' @return Invisible NULL. Creates a plot in the current graphics device.
+#' 
+#' @details This function creates a side-by-side comparison showing:
+#' \itemize{
+#'   \item Left panel: Initial white canvas
+#'   \item Center panel: Best MCMC result
+#'   \item Right panel: Target image
+#' }
+#' 
+#' @examples
+#' \dontrun{
+#' # After running MCMC
+#' res <- run_line_painter("image.png", iters = 5000)
+#' target_img <- load_image_rgb("image.png", 800, 600)
+#' default_canvas <- array(1, dim = c(600, 800, 3))
+#' 
+#' # Create triptych
+#' create_triptych(default_canvas, res$best$canvas, target_img)
+#' }
 #' @export
 create_triptych <- function(default_canvas, best_canvas, target_img, 
                            titles = c("Default (White Canvas)", "Best MCMC Result", "True Image"),
