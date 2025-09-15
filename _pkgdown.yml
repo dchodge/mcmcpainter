@@ -21,20 +21,6 @@ articles:
       - me_mcmc_demo
 
 reference:
-  - title: "Line Painting"
+  - title: "Package Functions"
     contents:
-      - run_line_painter
-      - create_triptych
-      - save_triptych
-  - title: "Dot Painting"
-    contents:
-      - run_dot_painter
-      - create_dot_triptych
-      - save_dot_triptych
-  - title: "Utilities"
-    contents:
-      - load_image_rgb
-      - save_png
-      - view_rgb
-      - get_image_info
-      - auto_configure_mcmc
+      - mcmcPainter-package
