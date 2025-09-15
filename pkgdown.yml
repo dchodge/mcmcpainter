@@ -8,4 +8,7 @@ articles:
   mcmcPainter_demo: mcmcPainter_demo.html
   me_mcmc_demo: me_mcmc_demo.html
   octopus_mcmc_demo: octopus_mcmc_demo.html
-last_built: 2025-09-15T16:22Z
+last_built: 2025-09-15T16:53Z
+urls:
+  reference: https://dchodge.github.io/mcmcpainter/reference
+  article: https://dchodge.github.io/mcmcpainter/articles

@@ -1,17 +1,17 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
-<url><loc>/404.html</loc></url>
-<url><loc>/LICENSE-text.html</loc></url>
-<url><loc>/articles/butterfly_mcmc_demo.html</loc></url>
-<url><loc>/articles/iamami_mcmc_demo.html</loc></url>
-<url><loc>/articles/index.html</loc></url>
-<url><loc>/articles/leaf_mcmc_demo.html</loc></url>
-<url><loc>/articles/mcmcPainter_demo.html</loc></url>
-<url><loc>/articles/me_mcmc_demo.html</loc></url>
-<url><loc>/articles/octopus_mcmc_demo.html</loc></url>
-<url><loc>/authors.html</loc></url>
-<url><loc>/index.html</loc></url>
-<url><loc>/reference/index.html</loc></url>
-<url><loc>/reference/mcmcArt-package.html</loc></url>
-<url><loc>/reference/mcmcPainter-package.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/404.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/LICENSE-text.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/butterfly_mcmc_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/iamami_mcmc_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/index.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/leaf_mcmc_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/mcmcPainter_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/me_mcmc_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/articles/octopus_mcmc_demo.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/authors.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/index.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/reference/index.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/reference/mcmcArt-package.html</loc></url>
+<url><loc>https://dchodge.github.io/mcmcpainter/reference/mcmcPainter-package.html</loc></url>
 </urlset>
 
