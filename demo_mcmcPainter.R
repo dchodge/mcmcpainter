@@ -8,7 +8,7 @@ cat("========================\n\n")
 # Load the package functions
 source("R/mcmcPainter.R")
 source("R/mcmc_core.R") 
-source("R/utilities.R")
+source("R/utilities.R") 
 
 # Compile the C++ code for performance
 cat("Compiling C++ code...\n")
