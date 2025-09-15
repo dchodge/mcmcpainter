@@ -1,0 +1,11 @@
+pandoc: 3.7.0.2
+pkgdown: 2.1.3
+pkgdown_sha: ~
+articles:
+  butterfly_mcmc_demo: butterfly_mcmc_demo.html
+  iamami_mcmc_demo: iamami_mcmc_demo.html
+  leaf_mcmc_demo: leaf_mcmc_demo.html
+  mcmcPainter_demo: mcmcPainter_demo.html
+  me_mcmc_demo: me_mcmc_demo.html
+  octopus_mcmc_demo: octopus_mcmc_demo.html
+last_built: 2025-09-15T16:01Z
