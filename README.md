@@ -2,35 +2,11 @@
 
 **MCMC-Based Artistic Line and Dot Painting Generation**
 
-A high-performance R package for generating artistic line and dot paintings using Reversible Jump MCMC algorithms. Transform any image into beautiful line-based or pointillism-style artwork through iterative optimization.
+Transform any image into beautiful line-based or pointillism-style artwork using Reversible Jump MCMC algorithms. This R package combines statistical optimization with digital art generation to create stunning artistic interpretations of photographs.
 
-## Package Structure
+## Overview
 
-```
-mcmcPainter/
-├── DESCRIPTION                 # Package metadata
-├── README.md                  # This file
-├── R/                        # R source code
-│   ├── mcmcPainter.R         # Main package functions
-│   ├── mcmc_core.R           # Core MCMC algorithm
-│   └── utilities.R           # Utility functions
-├── inst/                     # Package data and results
-│   ├── extdata/              # Input images (leaf.png, leaf_converted.png, iamami.png)
-│   ├── figures/              # Generated artwork and examples
-│   └── results/              # MCMC output directories
-├── man/                      # Package documentation
-│   └── mcmcPainter-package.Rd # Main package documentation
-├── src/                      # C++ source code
-│   └── mcmc_painter_cpp.cpp # C++ optimization code
-├── vignettes/                # Package vignettes
-│   ├── mcmcPainter_demo.Rmd # Complete package demo
-│   ├── leaf_mcmc_demo.Rmd   # Leaf image MCMC demo
-│   └── iamami_mcmc_demo.Rmd # Iamami image MCMC demo with auto-configuration
-├── demo_mcmcPainter.R        # Package functionality demo
-├── create_leaf_triptych.R    # Standalone triptych script
-├── create_iamami_triptych.R  # Iamami triptych with auto-configuration
-└── OPTIMIZATION_SUMMARY.md   # Performance optimization details
-```
+`mcmcPainter` uses advanced Markov Chain Monte Carlo (MCMC) techniques to iteratively build artwork by adding, removing, and modifying artistic elements (lines or dots) until the result closely matches a target image. The algorithm intelligently explores the space of possible artworks, gradually improving the match through statistical optimization.
 
 ## Key Features
 
@@ -40,13 +16,16 @@ mcmcPainter/
 - **📐 Smart Scaling**: Automatic image analysis and parameter optimization
 - **📊 Progress Tracking**: Saves intermediate results every N iterations
 - **🎯 Quality Control**: PNG verification and intelligent parameter tuning
-- **📦 Professional Package**: Full R package structure with vignettes and documentation
+- **📦 Professional Package**: Full R package structure with comprehensive documentation
 
-## Quick Start
+## Installation
 
 ```r
 # Install dependencies
 install.packages(c("Rcpp", "magick", "png", "knitr", "rmarkdown"))
+
+# Clone the repository
+# git clone https://github.com/davidhodgson/mcmcPainter.git
 
 # Load the package
 source("R/mcmcPainter.R")
@@ -55,7 +34,13 @@ source("R/utilities.R")
 
 # Compile C++ code
 Rcpp::sourceCpp("src/mcmc_painter_cpp.cpp")
+```
 
+## Quick Start
+
+### Line Painting
+
+```r
 # Generate line painting
 res <- run_line_painter(
   image_path = "inst/extdata/leaf_converted.png",
@@ -71,49 +56,139 @@ create_triptych(
 )
 ```
 
-## Key Functions
+### Dot Painting (Pointillism)
 
-### **Line Painting**
+```r
+# Generate dot painting
+res <- run_dot_painter(
+  image_path = "inst/extdata/leaf_converted.png",
+  iters = 10000,
+  out_dir = "inst/results/my_dot_artwork"
+)
+
+# Create dot triptych
+create_dot_triptych(
+  default_canvas = array(1, dim = c(800, 1422, 3)),
+  best_canvas = res$best$canvas,
+  target_img = load_image_rgb("inst/extdata/leaf_converted.png", 800, 1422)
+)
+```
+
+## How It Works
+
+### The MCMC Algorithm
+
+The package implements a Reversible Jump MCMC algorithm with four types of moves:
+
+1. **Birth**: Add new artistic elements (lines or dots) based on image residuals
+2. **Death**: Remove existing elements
+3. **Jitter**: Perturb element parameters (position, color, opacity, size)
+4. **Swap**: Reorder element rendering for better composition
+
+### Line Painting Algorithm
+
+For line-based artwork, each line is defined by:
+- **Position**: Start and end coordinates (x1, y1, x2, y2)
+- **Color**: RGB values (r, g, b)
+- **Opacity**: Alpha transparency (0-1)
+- **Thickness**: Line width in pixels
+
+The algorithm uses data-driven birth proposals, sampling new lines from areas with high image residuals to focus on important features.
+
+### Dot Painting Algorithm
+
+For pointillism-style artwork, each dot is defined by:
+- **Position**: Center coordinates (x, y)
+- **Color**: RGB values (r, g, b)
+- **Opacity**: Alpha transparency (0-1)
+- **Radius**: Dot size in pixels
+
+The algorithm creates pointillism effects by strategically placing dots of varying sizes and opacities.
+
+### Performance Optimization
+
+- **C++ Implementation**: Core rendering functions written in C++ for 3-20x speedup
+- **Bounding Box Optimization**: Only re-renders affected regions for efficiency
+- **Adaptive Temperature**: Gradually increases exploration to balance quality and speed
+- **Memory Management**: Efficient array operations and memory usage
+
+## Package Structure
+
+```
+mcmcPainter/
+├── R/                     # R source code
+│   ├── mcmcPainter.R     # Main package functions
+│   ├── mcmc_core.R       # Core MCMC algorithm
+│   ├── utilities.R       # Utility functions
+│   └── dot_mcmc_core.R   # Dot painting algorithm
+├── src/                   # C++ optimization code
+│   ├── mcmc_painter_cpp.cpp
+│   └── dot_painter_cpp.cpp
+├── vignettes/             # Documentation and examples
+│   ├── mcmcPainter_demo.Rmd
+│   ├── leaf_mcmc_demo.Rmd
+│   ├── iamami_mcmc_demo.Rmd
+│   ├── butterfly_mcmc_demo.Rmd
+│   ├── octopus_mcmc_demo.Rmd
+│   └── me_mcmc_demo.Rmd
+├── inst/extdata/          # Sample images
+├── inst/results/          # Generated artwork examples
+└── create/                # Standalone execution scripts
+```
+
+## Main Functions
+
+### Line Painting
 - `run_line_painter()`: Main function to generate line paintings
 - `create_triptych()`: Create before/after visualizations
 - `save_triptych()`: Save triptychs to PDF/PNG
 
-### **Dot Painting** 🆕
+### Dot Painting
 - `run_dot_painter()`: Main function to generate dot paintings
 - `create_dot_triptych()`: Create dot painting visualizations
 - `save_dot_triptych()`: Save dot triptychs to PDF/PNG
 
-### **Utilities**
+### Utilities
 - `load_image_rgb()`: Load and resize target images
 - `save_png()`: Save generated artwork
 - `view_rgb()`: Display images
 - `get_image_info()`: Analyze image properties
 - `auto_configure_mcmc()`: Optimize parameters automatically
 
-## MCMC Algorithms
+## Examples
 
-### **Line Painting Algorithm**
-The package implements a Reversible Jump MCMC algorithm with four move types:
+The package includes several example images and pre-generated results:
 
-1. **Birth**: Add new lines based on image residuals
-2. **Death**: Remove existing lines
-3. **Jitter**: Perturb line parameters
-4. **Swap**: Reorder line rendering
+- **Leaf**: Botanical line artwork (132KB image)
+- **Iamami**: Portrait with auto-configuration (336KB image)
+- **Butterfly**: High-detail 100K iteration run (4.2MB image)
+- **Octopus**: Marine life pointillism (380KB image)
+- **Portrait**: Personal photo artwork (3.2MB image)
 
-### **Dot Painting Algorithm** 🆕
-A specialized MCMC algorithm for pointillism-style artwork:
+## Vignettes
 
-1. **Birth**: Add new dots based on image residuals
-2. **Death**: Remove existing dots
-3. **Jitter**: Modify dot position, radius, alpha, and color
-4. **Adaptive**: Temperature adjustment for optimal exploration
+Comprehensive tutorials are available:
+
+- **Complete Demo**: Full package functionality walkthrough
+- **Leaf Tutorial**: Step-by-step line painting example
+- **Iamami Tutorial**: Auto-configuration and optimization
+- **High-Quality Examples**: 100K iteration demonstrations
 
 ## Performance
 
-- **3-20x speedup** compared to pure R implementation
-- **Optimized C++** core functions for line rendering
-- **Efficient memory** management and array operations
-- **Scalable** to large images (1000x1000+ pixels)
+- **Speed**: 3-20x faster than pure R implementation
+- **Scalability**: Handles images up to 2000x2000 pixels
+- **Memory**: Efficient memory usage for large images
+- **Quality**: Adaptive algorithms ensure optimal results
+
+## Requirements
+
+- R >= 4.0.0
+- Rcpp
+- magick
+- png
+- knitr (for vignettes)
+- rmarkdown (for documentation)
 
 ## Output Structure
 
@@ -125,97 +200,44 @@ Each MCMC run creates:
 - `final.png`: Final result
 - `best_iter_XXXXXX.png`: Best iteration found
 
-## Requirements
+## Applications
 
-- R >= 4.0.0
-- Rcpp
-- magick
-- png
+- **Digital Art**: Create unique artistic interpretations of photos
+- **Educational**: Demonstrate MCMC algorithms and optimization
+- **Research**: Explore algorithmic art and computational creativity
+- **Entertainment**: Generate personalized artwork from family photos
 
-## Installation
+## Technical Details
 
-```r
-# Install dependencies
-install.packages(c("Rcpp", "magick", "png", "knitr", "rmarkdown"))
+The package uses advanced statistical techniques:
 
-# Clone or download the package
-# git clone https://github.com/davidhodgson/mcmcPainter.git
-
-# Source the package
-source("R/mcmcPainter.R")
-source("R/mcmc_core.R")
-source("R/utilities.R")
-
-# Compile C++ code
-Rcpp::sourceCpp("src/mcmc_painter_cpp.cpp")
-```
-
-## Examples
-
-See the `inst/results/` directory for example outputs from various MCMC runs.
-
-## Vignettes
-
-The package includes comprehensive vignettes demonstrating the workflow:
-
-- **`vignettes/mcmcPainter_demo.Rmd`**: Complete package functionality demo
-- **`vignettes/leaf_mcmc_demo.Rmd`**: Leaf image MCMC demo
-- **`vignettes/iamami_mcmc_demo.Rmd`**: Iamami image MCMC demo with auto-configuration
-- **`vignettes/butterfly_mcmc_demo.Rmd`**: Butterfly image 100K MCMC demo
-- **`vignettes/octopus_mcmc_demo.Rmd`**: Octopus image 100K MCMC demo
-- **`vignettes/me_mcmc_demo.Rmd`**: Personal image 100K MCMC demo
-
-## Pre-built Scripts
-
-For quick results, use the pre-built scripts in the `create/` folder:
-
-### **Line Painting Scripts**
-#### **High-Quality 100K MCMC Runs**
-```r
-# Maximum detail and quality (3-5 hours runtime)
-source("create/create_butterfly_triptych.R")  # 4.2MB image
-source("create/create_me_triptych.R")         # 3.2MB image
-source("create/create_octopus_triptych.R")    # 380KB image
-source("create/run_iamami_100k.R")            # 336KB image
-```
-
-#### **Standard MCMC Runs**
-```r
-# Quick results (30-60 minutes runtime)
-source("create/create_leaf_triptych.R")       # 132KB image
-source("create/create_iamami_triptych.R")     # 336KB image
-```
-
-### **Dot Painting Scripts** 🆕
-```r
-# Pointillism-style artwork (30-60 minutes runtime)
-source("create/create_dot_triptych.R")        # Leaf image with dots
-```
-
-### **Running the Demos**
-
-```r
-# Run the complete package demo
-source("demo_mcmcPainter.R")
-
-# Run any specific image demo
-source("create/create_butterfly_triptych.R")
-
-# Or render the vignettes
-rmarkdown::render("vignettes/mcmcPainter_demo.Rmd")
-rmarkdown::render("vignettes/leaf_mcmc_demo.Rmd")
-rmarkdown::render("vignettes/iamami_mcmc_demo.Rmd")
-```
-
-### New Auto-Configuration Features
-
-The package now includes intelligent image analysis:
-
-- **`get_image_info()`**: Automatically detects image dimensions and verifies PNG files
-- **`auto_configure_mcmc()`**: Optimizes MCMC parameters based on image complexity
-- **Smart scaling**: Automatically adjusts dimensions for optimal performance
-- **PNG verification**: Distinguishes between true PNG files and renamed files
+- **Reversible Jump MCMC**: For variable-dimension parameter spaces
+- **Data-Driven Proposals**: Intelligent birth moves based on image residuals
+- **Adaptive Temperature**: Dynamic exploration-exploitation balance
+- **Alpha Compositing**: Proper color blending for realistic effects
+- **Bounding Box Optimization**: Efficient rendering updates
 
 ## License
 
 MIT License - see LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+## Citation
+
+If you use this package in your research, please cite:
+
+```bibtex
+@software{mcmcPainter,
+  title = {mcmcPainter: MCMC-Based Artistic Line and Dot Painting Generation},
+  author = {David Hodgson},
+  year = {2024},
+  url = {https://github.com/davidhodgson/mcmcPainter}
+}
+```
+
+---
+
+*Transform your images into algorithmic art with the power of MCMC optimization!* 🎨⚡
