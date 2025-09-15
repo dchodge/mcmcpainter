@@ -39,7 +39,7 @@ jobs:
 
       - name: Build site
         run: |
-          Rscript -e "pkgdown::build_site()"
+          Rscript -e "pkgdown::build_site(install = TRUE, new_process = FALSE)"
         shell: bash
 
       - name: Deploy to GitHub Pages 🚀

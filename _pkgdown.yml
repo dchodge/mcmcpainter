@@ -1,0 +1,40 @@
+url: https://dchodge.github.io/mcmcpainter
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search]
+
+articles:
+  - title: "Getting Started"
+    contents:
+      - mcmcPainter_demo
+      - leaf_mcmc_demo
+      - iamami_mcmc_demo
+  - title: "High-Quality Examples"
+    contents:
+      - butterfly_mcmc_demo
+      - octopus_mcmc_demo
+      - me_mcmc_demo
+
+reference:
+  - title: "Line Painting"
+    contents:
+      - run_line_painter
+      - create_triptych
+      - save_triptych
+  - title: "Dot Painting"
+    contents:
+      - run_dot_painter
+      - create_dot_triptych
+      - save_dot_triptych
+  - title: "Utilities"
+    contents:
+      - load_image_rgb
+      - save_png
+      - view_rgb
+      - get_image_info
+      - auto_configure_mcmc
