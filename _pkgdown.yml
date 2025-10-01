@@ -19,6 +19,7 @@ articles:
       - butterfly_mcmc_demo
       - octopus_mcmc_demo
       - me_mcmc_demo
+      - lotus_mcmc_demo
 
 reference:
   - title: "Package Functions"

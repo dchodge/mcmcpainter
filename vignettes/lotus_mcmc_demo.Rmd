@@ -1,0 +1,120 @@
+---
+title: "Lotus MCMC Line Painting Demo"
+author: "David Hodgson"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Lotus MCMC Line Painting Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6
+)
+```
+
+# Lotus MCMC Line Painting Demo
+
+This vignette demonstrates the MCMC line painting algorithm applied to a beautiful lotus flower image. The algorithm will run for 100,000 iterations to create a high-quality artistic interpretation.
+
+## Load the Package
+
+```{r load-package}
+# Load the mcmcPainter package
+library(mcmcPainter)
+```
+
+## Load and Display the Target Image
+
+```{r load-image}
+# Load the lotus image
+image_path <- "../inst/extdata/lotus.png"
+
+# Display the target image
+if (file.exists(image_path)) {
+  # Load and display the image
+  img <- png::readPNG(image_path)
+  plot.new()
+  rasterImage(img, 0, 0, 1, 1)
+  title("Target Lotus Image")
+} else {
+  cat("Image not found at:", image_path, "\n")
+}
+```
+
+## Run MCMC Line Painting
+
+```{r run-mcmc, eval=FALSE}
+# Run the MCMC line painting algorithm
+# Note: This is a long-running process (several hours for 100,000 iterations)
+res <- run_line_painter(
+  image_path = image_path,
+  max_dimension = 1200,
+  iters = 100000,
+  out_dir = "../inst/results/lotus_line_painting_100k",
+  seed = 42,
+  auto_config = TRUE,
+  save_every = 5000,
+  verbose = TRUE
+)
+```
+
+## Create Triptych Visualization
+
+```{r create-triptych, eval=FALSE}
+# Create a triptych showing the progression
+triptych_path <- create_triptych(
+  image_path = image_path,
+  result = res,
+  out_path = "../inst/results/lotus_line_triptych.png",
+  max_dimension = 1200
+)
+```
+
+## Display Results
+
+```{r display-results, eval=FALSE}
+# Display the final triptych
+if (file.exists("../inst/results/lotus_line_triptych.png")) {
+  triptych <- png::readPNG("../inst/results/lotus_line_triptych.png")
+  plot.new()
+  rasterImage(triptych, 0, 0, 1, 1)
+  title("Lotus MCMC Line Painting Triptych")
+} else {
+  cat("Triptych not yet created. Run the MCMC algorithm first.\n")
+}
+```
+
+## Algorithm Details
+
+The MCMC line painting algorithm uses the following approach:
+
+1. **Initialization**: Start with a white canvas
+2. **Iterative Process**: For each iteration:
+   - **Birth Move**: Add new lines based on image residuals
+   - **Death Move**: Remove existing lines
+   - **Jitter Move**: Perturb line parameters (position, color, opacity, thickness)
+   - **Swap Move**: Reorder line rendering for better composition
+3. **Acceptance**: Accept or reject moves based on likelihood improvement
+4. **Adaptive Temperature**: Gradually increase acceptance rate over time
+
+## Performance Notes
+
+- **Iterations**: 100,000 steps for high-quality results
+- **Save Frequency**: Every 5,000 iterations
+- **Canvas Size**: Automatically scaled to 1200px maximum dimension
+- **Expected Runtime**: Several hours on modern hardware
+
+## Results Interpretation
+
+The final triptych will show:
+- **Left Panel**: Initial white canvas
+- **Middle Panel**: Best MCMC result after 100,000 iterations
+- **Right Panel**: Original target image
+
+This allows for easy comparison of the algorithm's performance and artistic interpretation quality.
