@@ -5,10 +5,11 @@ articles:
   butterfly_mcmc_demo: butterfly_mcmc_demo.html
   iamami_mcmc_demo: iamami_mcmc_demo.html
   leaf_mcmc_demo: leaf_mcmc_demo.html
+  lotus_mcmc_demo: lotus_mcmc_demo.html
   mcmcPainter_demo: mcmcPainter_demo.html
   me_mcmc_demo: me_mcmc_demo.html
   octopus_mcmc_demo: octopus_mcmc_demo.html
-last_built: 2025-09-15T17:28Z
+last_built: 2025-10-01T22:13Z
 urls:
   reference: https://dchodge.github.io/mcmcpainter/reference
   article: https://dchodge.github.io/mcmcpainter/articles
