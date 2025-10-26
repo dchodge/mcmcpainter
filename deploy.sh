@@ -25,6 +25,18 @@ fi
 echo "🔨 Building WASM module..."
 cd web_frontend
 npm install
+
+# Check if Emscripten is available
+if ! command -v emcc &> /dev/null; then
+    echo "❌ Error: Emscripten not found. Please install it first:"
+    echo "   git clone https://github.com/emscripten-core/emsdk.git"
+    echo "   cd emsdk"
+    echo "   ./emsdk install latest"
+    echo "   ./emsdk activate latest"
+    echo "   source ./emsdk_env.sh"
+    exit 1
+fi
+
 npm run build-wasm
 
 if [ $? -ne 0 ]; then

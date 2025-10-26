@@ -19,6 +19,12 @@ jobs:
       with:
         node-version: '18'
         
+    - name: Install Emscripten
+      uses: mymindstorm/setup-emsdk@v12
+      with:
+        version: 'latest'
+        actions-cache: 'true'
+        
     - name: Install dependencies
       run: |
         cd web_frontend
