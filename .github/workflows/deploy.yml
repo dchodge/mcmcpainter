@@ -50,10 +50,15 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
+    - name: Create web directory
+      run: |
+        mkdir -p web_app
+        cp -r web_frontend/web/* web_app/
+        
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './web_frontend/web'
+        path: './web_app'
         
     - name: Deploy to GitHub Pages
       id: deployment
