@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd web_frontend && npm install && npm run build-wasm",
+  "buildCommand": "cd web_frontend && npm install",
   "outputDirectory": "web_frontend/web",
   "installCommand": "cd web_frontend && npm install",
   "framework": null,
