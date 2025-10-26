@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "build-wasm": "emcc mcmc_wasm.cpp -o mcmc_wasm.js -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s EXPORT_NAME='Module' -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' -s EXPORTED_FUNCTIONS='[\"_malloc\",\"_free\"]' --bind -O3 -std=c++11",
     "build": "npm run build-wasm",
-    "debug-wasm": "emcc mcmc_wasm.cpp -o mcmc_wasm.js -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s EXPORT_NAME='Module' -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' -s EXPORTED_FUNCTIONS='[\"_malloc\",\"_free\"]' --bind -g -s ASSERTIONS=1 -std=c++11"
+    "debug-wasm": "emcc mcmc_wasm.cpp -o mcmc_wasm.js -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s EXPORT_NAME='Module' -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' -s EXPORTED_FUNCTIONS='[\"_malloc\",\"_free\"]' --bind -g -s ASSERTIONS=1 -std=c++11",
+    "deploy": "npm run build && cp -r web/* ../docs/"
   },
   "dependencies": {
     "express": "^4.18.2",
