@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCMC Painter - Real-time Artistic Generation</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Avenir', 'Helvetica Neue', Arial, sans-serif;
+            background: #fff;
+            color: #000;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            font-weight: 100;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            color: #666;
+            font-weight: 300;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            border: 2px dashed #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #999;
+            background: #f9f9f9;
+        }
+        
+        .upload-section.dragover {
+            border-color: #000;
+            background: #f9f9f9;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            font-weight: 500;
+        }
+        
+        .upload-btn:hover {
+            background: #333;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .image-preview {
+            max-width: 400px;
+            max-height: 400px;
+            margin: 20px auto;
+            display: none;
+            border: 1px solid #333;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 300;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .control-group input, .control-group select {
+            background: #fff;
+            color: #000;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            font-size: 1em;
+        }
+        
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #000;
+        }
+        
+        .start-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px;
+        }
+        
+        .start-btn:hover:not(:disabled) {
+            background: #333;
+        }
+        
+        .start-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .progress-section {
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: #ddd;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #000;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .canvas-container {
+            display: flex;
+            gap: 40px;
+            margin: 60px 0;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .canvas-panel {
+            text-align: center;
+        }
+        
+        .canvas-panel h3 {
+            margin-bottom: 20px;
+            font-weight: 300;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        #original-canvas, #painted-canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: 100;
+            color: #000;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 300;
+        }
+        
+        .error-message {
+            background: #f8f8f8;
+            color: #d32f2f;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        
+        .success-message {
+            background: #f8f8f8;
+            color: #2e7d32;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .canvas-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCMC PAINTER</h1>
+            <p>algorithmic art generation</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h2>SELECT IMAGE</h2>
+                <p>upload or use default (max 800×800px)</p>
+                <input type="file" id="imageInput" class="file-input" accept="image/*">
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                        UPLOAD
+                    </button>
+                    <button class="upload-btn" id="useLotusBtn">
+                        LOTUS
+                    </button>
+                    <button class="upload-btn" id="useViLeighBtn">
+                        VIVIEN LEIGH
+                    </button>
+                    <button class="upload-btn" id="useOctopusBtn">
+                        OCTOPUS
+                    </button>
+                </div>
+                <p>or drag and drop</p>
+                <img id="imagePreview" class="image-preview" alt="Preview">
+            </div>
+            
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <div class="control-group">
+                    <label for="paintingMode">MODE</label>
+                    <select id="paintingMode">
+                        <option value="lines" selected>LINES</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="maxIterations">ITERATIONS</label>
+                    <input type="number" id="maxIterations" value="100000" min="1000" max="500000" step="1000">
+                </div>
+                <div class="control-group">
+                    <label for="updateFrequency">UPDATE EVERY</label>
+                    <input type="number" id="updateFrequency" value="100" min="10" max="10000" step="10">
+                </div>
+            </div>
+            
+            <!-- Advanced Controls (collapsible) -->
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="upload-btn" onclick="document.getElementById('advancedControls').style.display = document.getElementById('advancedControls').style.display === 'none' ? 'flex' : 'none'">
+                    ADVANCED PARAMETERS
+                </button>
+            </div>
+            
+            <div class="controls" id="advancedControls" style="display: none;">
+                <div class="control-group">
+                    <label for="betaInit">BETA INITIAL</label>
+                    <input type="number" id="betaInit" value="0.1" min="0.01" max="1" step="0.01">
+                    <small style="color: #999; font-size: 0.8em;">Initial temperature parameter. Lower = more selective early on</small>
+                </div>
+                <div class="control-group">
+                    <label for="betaFinal">BETA FINAL</label>
+                    <input type="number" id="betaFinal" value="2.0" min="0.1" max="10" step="0.1">
+                    <small style="color: #999; font-size: 0.8em;">Final temperature parameter. Higher = more accepting of changes</small>
+                </div>
+                <div class="control-group">
+                    <label for="kLambda">K LAMBDA</label>
+                    <input type="number" id="kLambda" value="0" min="0" step="10">
+                    <small style="color: #999; font-size: 0.8em;">Prior mean for number of lines. 0 = auto (0.5 × width)</small>
+                </div>
+                <div class="control-group">
+                    <label for="maxDimension">MAX DIMENSION</label>
+                    <input type="number" id="maxDimension" value="800" min="100" max="1200" step="50">
+                    <small style="color: #999; font-size: 0.8em;">Maximum canvas dimension (px). Larger = more detail but slower</small>
+                </div>
+                
+                <!-- Technical Details Section -->
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: left;">
+                    <h4 style="margin-top: 0; color: #333;">Technical Details</h4>
+                    
+                    <h5 style="color: #555; margin-bottom: 8px;">Temperature Schedule (Beta)</h5>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                        Controls the acceptance probability of MCMC moves. Starts at β_init (conservative) 
+                        and gradually increases to β_final (more exploratory). Higher β values accept 
+                        more moves, including those that temporarily worsen the image.
+                    </p>
+                    
+                    <h5 style="color: #555; margin-bottom: 8px;">K Lambda (Line Count Prior)</h5>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                        Expected number of lines in the final painting. Acts as a regularization 
+                        parameter - too low results in underfitting, too high in overfitting. 
+                        Auto-setting uses 0.5 × canvas width as a heuristic.
+                    </p>
+                    
+                    <h5 style="color: #555; margin-bottom: 8px;">MCMC Moves</h5>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                        <strong>Birth (25%):</strong> Add new lines in high-error regions<br>
+                        <strong>Death (25%):</strong> Remove existing lines<br>
+                        <strong>Jitter (45%):</strong> Perturb line parameters (position, color, opacity)<br>
+                        <strong>Swap (5%):</strong> Reorder line rendering for better composition
+                    </p>
+                    
+                    <h5 style="color: #555; margin-bottom: 8px;">Performance Tips</h5>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                        • Higher iterations = better quality but longer runtime<br>
+                        • Larger dimensions = more detail but slower processing<br>
+                        • Lower β_init = more conservative early exploration<br>
+                        • Higher β_final = more aggressive final optimization
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Start Button -->
+            <div style="text-align: center;">
+                <button id="startBtn" class="start-btn" disabled>START</button>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <h3>PROGRESS</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">0 / 0 iterations</p>
+            </div>
+            
+            <!-- Canvas Container -->
+            <div class="canvas-container" id="canvasContainer" style="display: none;">
+                <div class="canvas-panel">
+                    <h3>ORIGINAL</h3>
+                    <canvas id="original-canvas"></canvas>
+                </div>
+                <div class="canvas-panel">
+                    <h3>PAINTING</h3>
+                    <canvas id="painted-canvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="stats" id="statsSection" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentIteration">0</div>
+                    <div class="stat-label">Current Iteration</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentSSE">0</div>
+                    <div class="stat-label">Current SSE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="bestSSE">∞</div>
+                    <div class="stat-label">Best SSE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="elementsCount">0</div>
+                    <div class="stat-label">Elements</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=13"></script>
+</body>
+</html>

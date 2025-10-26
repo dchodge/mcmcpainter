@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCMC Painter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Avenir', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            color: #000000;
+        }
+        
+        .header p {
+            font-size: 16px;
+            font-weight: 400;
+            color: #666666;
+            letter-spacing: 0.5px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .section {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 32px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #000000;
+            letter-spacing: 1px;
+        }
+        
+        /* Dropdown Styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Avenir', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+        
+        .dropdown-btn:hover {
+            background: #333333;
+        }
+        
+        .dropdown-btn.active {
+            background: #333333;
+        }
+        
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }
+        
+        .dropdown-btn.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+            margin-top: 4px;
+        }
+        
+        .dropdown-content.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-section {
+            padding: 8px 0;
+        }
+        
+        .dropdown-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #999999;
+            padding: 8px 16px 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f8f8;
+        }
+        
+        .image-name, .preset-name {
+            font-weight: 500;
+            color: #000000;
+        }
+        
+        .image-desc, .preset-desc {
+            font-size: 12px;
+            color: #666666;
+            font-weight: 400;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 8px 0;
+        }
+        
+        /* Image Preview */
+        .image-preview-container {
+            margin-top: 24px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .image-preview-header {
+            background: #f8f8f8;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .image-preview-header span {
+            font-weight: 500;
+            color: #000000;
+            font-size: 14px;
+        }
+        
+        .clear-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 2px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        
+        .clear-btn:hover {
+            background: #333333;
+        }
+        
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        /* Configuration Controls */
+        .config-controls {
+            margin-top: 24px;
+        }
+        
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 500;
+            color: #000000;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        
+        .control-group input {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Avenir', sans-serif;
+            transition: border-color 0.2s ease;
+            background: #ffffff;
+        }
+        
+        .control-group input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+        
+        .control-group small {
+            color: #666666;
+            font-size: 12px;
+            font-weight: 400;
+        }
+        
+        /* Advanced Controls */
+        .advanced-toggle {
+            margin: 24px 0;
+            text-align: center;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: 1px solid #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+            font-family: 'Avenir', sans-serif;
+            font-weight: 500;
+        }
+        
+        .toggle-btn:hover {
+            border-color: #000000;
+            color: #000000;
+        }
+        
+        .toggle-btn.active {
+            border-color: #000000;
+            color: #000000;
+        }
+        
+        .toggle-arrow {
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }
+        
+        .toggle-btn.active .toggle-arrow {
+            transform: rotate(90deg);
+        }
+        
+        .advanced-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        /* Live Painting Section */
+        .painting-section {
+            grid-column: 1 / -1;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 32px;
+        }
+        
+        .painting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .start-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Avenir', sans-serif;
+        }
+        
+        .start-btn:hover:not(:disabled) {
+            background: #333333;
+        }
+        
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .canvas-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .canvas-wrapper {
+            text-align: center;
+        }
+        
+        .canvas-wrapper h3 {
+            margin-bottom: 12px;
+            color: #000000;
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        
+        .canvas-wrapper canvas {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            margin-top: 24px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #000000;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f8f8;
+            padding: 16px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        /* Messages */
+        .message-area {
+            margin: 20px 0;
+        }
+        
+        .error-message, .success-message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background: #f8f8f8;
+            color: #000000;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .success-message {
+            background: #f8f8f8;
+            color: #000000;
+            border: 1px solid #e0e0e0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .canvas-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .container {
+                padding: 20px 16px;
+            }
+        }
+        
+        /* Mathematical Content Styles */
+        .math-content {
+            margin-top: 20px;
+        }
+        
+        .math-section {
+            line-height: 1.7;
+        }
+        
+        .math-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+        
+        .math-section h4 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #000000;
+            margin: 20px 0 8px;
+        }
+        
+        .math-section p {
+            margin-bottom: 12px;
+            color: #333333;
+        }
+        
+        .math-section ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+        
+        .math-section li {
+            margin-bottom: 8px;
+            color: #333333;
+        }
+        
+        .math-formula {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .math-formula p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #000000;
+        }
+        
+        .math-name {
+            font-weight: 500;
+            color: #000000;
+        }
+        
+        .math-desc {
+            font-size: 12px;
+            color: #666666;
+            font-weight: 400;
+        }
+        
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+        
+        /* Drag and drop styles */
+        body.dragover {
+            background: #f8f8f8 !important;
+        }
+        
+        body.dragover::before {
+            content: 'Drop PNG file here';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 16px 32px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            font-family: 'Avenir', sans-serif;
+            z-index: 1000;
+            pointer-events: none;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCMC Painter</h1>
+            <p>Generate artistic paintings using Markov Chain Monte Carlo algorithms</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Image Selection Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>Image Selection</h2>
+                    <div class="dropdown">
+                        <button class="dropdown-btn" id="imageDropdownBtn">
+                            <span id="imageDropdownText">Choose Image Source</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="dropdown-content" id="imageDropdown">
+                            <div class="dropdown-section">
+                                <div class="dropdown-label">Default Images</div>
+                                <div class="dropdown-item" data-action="lotus">
+                                    <span class="image-name">Lotus</span>
+                                    <span class="image-desc">Pink flower</span>
+                                </div>
+                                <div class="dropdown-item" data-action="vi_leigh">
+                                    <span class="image-name">Vivien Leigh</span>
+                                    <span class="image-desc">Classic portrait</span>
+                                </div>
+                                <div class="dropdown-item" data-action="octopus">
+                                    <span class="image-name">Octopus</span>
+                                    <span class="image-desc">Marine creature</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-label">Upload Image</div>
+                                <div class="dropdown-item" data-action="upload">
+                                    <span class="image-name">Choose File</span>
+                                    <span class="image-desc">PNG files only</span>
+                                </div>
+                                <div class="dropdown-item" data-action="dragdrop">
+                                    <span class="image-name">Drag & Drop</span>
+                                    <span class="image-desc">PNG files only</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden file input -->
+                <input type="file" id="imageInput" class="file-input" accept=".png">
+            </div>
+            
+            <!-- Algorithm Configuration Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>Algorithm Configuration</h2>
+                    <div class="dropdown">
+                        <button class="dropdown-btn" id="configDropdownBtn">
+                            <span id="configDropdownText">Quick Settings</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="dropdown-content" id="configDropdown">
+                            <div class="dropdown-item" data-preset="quick">
+                                <span class="preset-name">Quick Demo</span>
+                                <span class="preset-desc">5K iterations, 50 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="standard">
+                                <span class="preset-name">Standard Quality</span>
+                                <span class="preset-desc">50K iterations, 100 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="high">
+                                <span class="preset-name">High Quality</span>
+                                <span class="preset-desc">100K iterations, 100 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="custom">
+                                <span class="preset-name">Custom Settings</span>
+                                <span class="preset-desc">Manual configuration</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Controls -->
+                <div class="config-controls" id="configControls">
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="maxIterations">Iterations</label>
+                            <input type="number" id="maxIterations" value="100000" min="1000" max="500000" step="1000">
+                        </div>
+                        <div class="control-group">
+                            <label for="updateFrequency">Update Every</label>
+                            <input type="number" id="updateFrequency" value="100" min="10" max="10000" step="10">
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Parameters -->
+                    <div class="advanced-toggle">
+                        <button class="toggle-btn" id="advancedToggle">
+                            <span>Advanced Parameters</span>
+                            <span class="toggle-arrow">▶</span>
+                        </button>
+                    </div>
+                    
+                    <div class="advanced-controls" id="advancedControls" style="display: none;">
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="betaInit">Beta Initial</label>
+                                <input type="number" id="betaInit" value="0.1" min="0.01" max="1" step="0.01">
+                                <small>Initial temperature (lower = more selective)</small>
+                            </div>
+                            <div class="control-group">
+                                <label for="betaFinal">Beta Final</label>
+                                <input type="number" id="betaFinal" value="2.0" min="0.1" max="10" step="0.1">
+                                <small>Final temperature (higher = more accepting)</small>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="kLambda">K Lambda</label>
+                                <input type="number" id="kLambda" value="0" min="0" step="10">
+                                <small>Expected line count (0 = auto)</small>
+                            </div>
+                            <div class="control-group">
+                                <label for="maxDimension">Max Dimension</label>
+                                <input type="number" id="maxDimension" value="800" min="100" max="1200" step="50">
+                                <small>Canvas size in pixels</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error/Success Messages -->
+        <div id="messageArea" class="message-area"></div>
+        
+        <!-- Live Painting Section -->
+        <div class="painting-section">
+            <div class="painting-header">
+                <h2>Live Painting</h2>
+                <button id="startBtn" class="start-btn" disabled>Start Painting</button>
+            </div>
+            
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <h3>Original Image</h3>
+                    <canvas id="originalCanvas"></canvas>
+                </div>
+                <div class="canvas-wrapper">
+                    <h3>MCMC Painting</h3>
+                    <canvas id="paintedCanvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Ready to start</div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="currentIteration">0</div>
+                        <div class="stat-label">Iteration</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="linesCount">0</div>
+                        <div class="stat-label">Lines</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="currentSSE">0</div>
+                        <div class="stat-label">Current SSE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bestSSE">0</div>
+                        <div class="stat-label">Best SSE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mathematical Explanation Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Mathematical Foundation</h2>
+                <div class="dropdown">
+                    <button class="dropdown-btn" id="mathDropdownBtn">
+                        <span id="mathDropdownText">Reversible Jump MCMC</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-content" id="mathDropdown">
+                        <div class="dropdown-section">
+                            <div class="dropdown-label">Algorithm Overview</div>
+                            <div class="dropdown-item" data-math="overview">
+                                <span class="math-name">Algorithm Overview</span>
+                                <span class="math-desc">High-level explanation</span>
+                            </div>
+                            <div class="dropdown-item" data-math="rj-mcmc">
+                                <span class="math-name">Reversible Jump MCMC</span>
+                                <span class="math-desc">Core mathematical framework</span>
+                            </div>
+                            <div class="dropdown-item" data-math="proposals">
+                                <span class="math-name">Proposal Mechanisms</span>
+                                <span class="math-desc">Birth, death, and update moves</span>
+                            </div>
+                            <div class="dropdown-item" data-math="acceptance">
+                                <span class="math-name">Acceptance Probabilities</span>
+                                <span class="math-desc">Metropolis-Hastings criteria</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mathematical Content -->
+            <div class="math-content" id="mathContent">
+                <div class="math-section" id="mathOverview" style="display: block;">
+                    <h3>Algorithm Overview</h3>
+                    <p>The MCMC Painter uses a <strong>Reversible Jump Markov Chain Monte Carlo (RJMCMC)</strong> algorithm to iteratively construct paintings that approximate a target image.</p>
+                    
+                    <h4>Key Components:</h4>
+                    <ul>
+                        <li><strong>State Space:</strong> Variable number of painting elements with parameters (x₁, y₁, x₂, y₂, color)</li>
+                        <li><strong>Target Distribution:</strong> Posterior probability based on image similarity</li>
+                        <li><strong>Proposal Moves:</strong> Birth, death, and update operations</li>
+                        <li><strong>Acceptance Rule:</strong> Metropolis-Hastings criterion with temperature annealing</li>
+                    </ul>
+                </div>
+                
+                <div class="math-section" id="mathRJMCMC" style="display: none;">
+                    <h3>Reversible Jump MCMC Framework</h3>
+                    <p>RJMCMC extends standard MCMC to handle variable-dimensional parameter spaces, allowing the algorithm to add or remove line segments while maintaining detailed balance.</p>
+                    
+                    <h4>Mathematical Formulation:</h4>
+                    <div class="math-formula">
+                        <p><strong>Target Distribution:</strong></p>
+                        <p>π(θ) ∝ exp(-β × SSE(θ)) × p(θ)</p>
+                        <p>where θ = {k, (x₁ᵢ, y₁ᵢ, x₂ᵢ, y₂ᵢ, cᵢ)ᵢ₌₁ᵏ}</p>
+                    </div>
+                    
+                    <ul>
+                        <li><strong>k:</strong> Number of painting elements</li>
+                        <li><strong>SSE(θ):</strong> Sum of squared errors between target and current image</li>
+                        <li><strong>β:</strong> Inverse temperature parameter</li>
+                        <li><strong>p(θ):</strong> Prior distribution over painting element parameters</li>
+                    </ul>
+                </div>
+                
+                <div class="math-section" id="mathProposals" style="display: none;">
+                    <h3>Proposal Mechanisms</h3>
+                    
+                    <h4>1. Birth Move (k → k+1)</h4>
+                    <p>Adds a new painting element with parameters sampled from the prior distribution.</p>
+                    <div class="math-formula">
+                        <p>θ' = θ ∪ {(x₁ₙₑʷ, y₁ₙₑʷ, x₂ₙₑʷ, y₂ₙₑʷ, cₙₑʷ)}</p>
+                    </div>
+                    
+                    <h4>2. Death Move (k → k-1)</h4>
+                    <p>Randomly selects and removes an existing painting element.</p>
+                    <div class="math-formula">
+                        <p>θ' = θ \ {(x₁ᵢ, y₁ᵢ, x₂ᵢ, y₂ᵢ, cᵢ)} for random i ∈ {1, ..., k}</p>
+                    </div>
+                    
+                    <h4>3. Update Move (k → k)</h4>
+                    <p>Modifies parameters of an existing painting element using Gaussian proposals.</p>
+                    <div class="math-formula">
+                        <p>x' = x + ε, where ε ~ N(0, σ²)</p>
+                    </div>
+                </div>
+                
+                <div class="math-section" id="mathAcceptance" style="display: none;">
+                    <h3>Acceptance Probabilities</h3>
+                    <p>The Metropolis-Hastings acceptance probability ensures detailed balance and convergence to the target distribution.</p>
+                    
+                    <h4>General Acceptance Formula:</h4>
+                    <div class="math-formula">
+                        <p>α = min(1, A)</p>
+                        <p>where A = (π(θ')/π(θ)) × (q(θ|θ')/q(θ'|θ)) × |J|</p>
+                    </div>
+                    
+                    <h4>For Birth Moves:</h4>
+                    <div class="math-formula">
+                        <p>A = (π(θ')/π(θ)) × (pₐₙₙₕₑₗₐₜₕ/pₐₙₙₕₑₗₐₜₕ) × (1/k')</p>
+                        <p>A = exp(-β × (SSE(θ') - SSE(θ))) × (1/k')</p>
+                    </div>
+                    
+                    <h4>For Death Moves:</h4>
+                    <div class="math-formula">
+                        <p>A = (π(θ')/π(θ)) × (pₐₙₙₕₑₗₐₜₕ/pₐₙₙₕₑₗₐₜₕ) × k</p>
+                        <p>A = exp(-β × (SSE(θ') - SSE(θ))) × k</p>
+                    </div>
+                    
+                    <h4>Temperature Annealing:</h4>
+                    <p>The inverse temperature β increases over iterations, making the algorithm more selective as it progresses:</p>
+                    <div class="math-formula">
+                        <p>β(t) = β₀ + (β₁ - β₀) × (t/T)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=17"></script>
+</body>
+</html>

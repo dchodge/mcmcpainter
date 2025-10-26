@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCMC Painter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .section-header h2 {
+            font-size: 1.4em;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        /* Dropdown Styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+        
+        .dropdown-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .dropdown-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+        
+        .dropdown-btn.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .dropdown-content.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-section {
+            padding: 15px 0;
+        }
+        
+        .dropdown-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #666;
+            padding: 0 20px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .image-name, .preset-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .image-desc, .preset-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 10px 0;
+        }
+        
+        /* Image Preview */
+        .image-preview-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #f0f0f0;
+        }
+        
+        .image-preview-header {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .image-preview-header span {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .clear-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        /* Configuration Controls */
+        .config-controls {
+            margin-top: 20px;
+        }
+        
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .control-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .control-group small {
+            color: #666;
+            font-size: 0.8em;
+        }
+        
+        /* Advanced Controls */
+        .advanced-toggle {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: 2px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .toggle-arrow {
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-btn.active .toggle-arrow {
+            transform: rotate(90deg);
+        }
+        
+        .advanced-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        /* Live Painting Section */
+        .painting-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .painting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .canvas-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .canvas-wrapper {
+            text-align: center;
+        }
+        
+        .canvas-wrapper h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .canvas-wrapper canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Messages */
+        .message-area {
+            margin: 20px 0;
+        }
+        
+        .error-message, .success-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .error-message {
+            background: #ffe6e6;
+            color: #d63031;
+            border: 1px solid #fab1a0;
+        }
+        
+        .success-message {
+            background: #e6f7e6;
+            color: #00b894;
+            border: 1px solid #55efc4;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .canvas-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCMC Line Painter</h1>
+            <p>Generate artistic line paintings using Markov Chain Monte Carlo algorithms</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Image Selection Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>📸 Image Selection</h2>
+                    <div class="dropdown">
+                        <button class="dropdown-btn" id="imageDropdownBtn">
+                            <span id="imageDropdownText">Choose Image Source</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="dropdown-content" id="imageDropdown">
+                            <div class="dropdown-section">
+                                <div class="dropdown-label">🎨 Default Images</div>
+                                <div class="dropdown-item" data-action="lotus">
+                                    <span class="image-name">Lotus</span>
+                                    <span class="image-desc">Pink flower</span>
+                                </div>
+                                <div class="dropdown-item" data-action="vi_leigh">
+                                    <span class="image-name">Vivien Leigh</span>
+                                    <span class="image-desc">Classic portrait</span>
+                                </div>
+                                <div class="dropdown-item" data-action="octopus">
+                                    <span class="image-name">Octopus</span>
+                                    <span class="image-desc">Marine creature</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-section">
+                                <div class="dropdown-label">📁 Upload Image</div>
+                                <div class="dropdown-item" data-action="upload">
+                                    <span class="image-name">Choose File</span>
+                                    <span class="image-desc">PNG, JPG, etc.</span>
+                                </div>
+                                <div class="dropdown-item" data-action="dragdrop">
+                                    <span class="image-name">Drag & Drop</span>
+                                    <span class="image-desc">Drop files here</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden file input -->
+                <input type="file" id="imageInput" class="file-input" accept="image/*">
+                
+                <!-- Image preview area -->
+                <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                    <div class="image-preview-header">
+                        <span id="currentImageName">Selected Image</span>
+                        <button class="clear-btn" id="clearImageBtn">✕</button>
+                    </div>
+                    <img id="imagePreview" class="image-preview" alt="Preview">
+                </div>
+            </div>
+            
+            <!-- Algorithm Configuration Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>⚙️ Algorithm Configuration</h2>
+                    <div class="dropdown">
+                        <button class="dropdown-btn" id="configDropdownBtn">
+                            <span id="configDropdownText">Quick Settings</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="dropdown-content" id="configDropdown">
+                            <div class="dropdown-item" data-preset="quick">
+                                <span class="preset-name">Quick Demo</span>
+                                <span class="preset-desc">5K iterations, 50 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="standard">
+                                <span class="preset-name">Standard Quality</span>
+                                <span class="preset-desc">50K iterations, 100 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="high">
+                                <span class="preset-name">High Quality</span>
+                                <span class="preset-desc">100K iterations, 100 updates</span>
+                            </div>
+                            <div class="dropdown-item" data-preset="custom">
+                                <span class="preset-name">Custom Settings</span>
+                                <span class="preset-desc">Manual configuration</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Controls -->
+                <div class="config-controls" id="configControls">
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="maxIterations">Iterations</label>
+                            <input type="number" id="maxIterations" value="100000" min="1000" max="500000" step="1000">
+                        </div>
+                        <div class="control-group">
+                            <label for="updateFrequency">Update Every</label>
+                            <input type="number" id="updateFrequency" value="100" min="10" max="10000" step="10">
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Parameters -->
+                    <div class="advanced-toggle">
+                        <button class="toggle-btn" id="advancedToggle">
+                            <span>Advanced Parameters</span>
+                            <span class="toggle-arrow">▶</span>
+                        </button>
+                    </div>
+                    
+                    <div class="advanced-controls" id="advancedControls" style="display: none;">
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="betaInit">Beta Initial</label>
+                                <input type="number" id="betaInit" value="0.1" min="0.01" max="1" step="0.01">
+                                <small>Initial temperature (lower = more selective)</small>
+                            </div>
+                            <div class="control-group">
+                                <label for="betaFinal">Beta Final</label>
+                                <input type="number" id="betaFinal" value="2.0" min="0.1" max="10" step="0.1">
+                                <small>Final temperature (higher = more accepting)</small>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="kLambda">K Lambda</label>
+                                <input type="number" id="kLambda" value="0" min="0" step="10">
+                                <small>Expected line count (0 = auto)</small>
+                            </div>
+                            <div class="control-group">
+                                <label for="maxDimension">Max Dimension</label>
+                                <input type="number" id="maxDimension" value="800" min="100" max="1200" step="50">
+                                <small>Canvas size in pixels</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error/Success Messages -->
+        <div id="messageArea" class="message-area"></div>
+        
+        <!-- Live Painting Section -->
+        <div class="painting-section">
+            <div class="painting-header">
+                <h2>🎨 Live Painting</h2>
+                <button id="startBtn" class="start-btn" disabled>Start Painting</button>
+            </div>
+            
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <h3>Original Image</h3>
+                    <canvas id="originalCanvas"></canvas>
+                </div>
+                <div class="canvas-wrapper">
+                    <h3>MCMC Painting</h3>
+                    <canvas id="paintedCanvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Ready to start</div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="currentIteration">0</div>
+                        <div class="stat-label">Iteration</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="linesCount">0</div>
+                        <div class="stat-label">Lines</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="currentSSE">0</div>
+                        <div class="stat-label">Current SSE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bestSSE">0</div>
+                        <div class="stat-label">Best SSE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=14"></script>
+</body>
+</html>
